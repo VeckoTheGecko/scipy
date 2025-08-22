@@ -1619,11 +1619,14 @@ class Rotation:
         if is_numpy(self._xp):
             vectors = xpx.atleast_nd(vectors, ndim=2, xp=self._xp)
 
+        if vectors.shape[-1] != 3:
+            raise ValueError(
+                f"Expected 3D vectors (i.e., last dimension shape to be 3). Got {vectors.shape=!r}."
+            )
+
         # Numpy optimization: The Cython backend typing requires us to have fixed
         # dimensions, so for the Numpy case we always broadcast the vector to 2D.
-        if self._backend is array_namespace(np.array(0)) and (
-            vectors.ndim > 2 or vectors.shape[-1] != 3
-        ):
+        if self._backend is array_namespace(np.array(0)) and vectors.ndim > 2:
             raise ValueError(
                 f"Expected input of shape (3,) or (P, 3) while using the numpy backend, got {vectors.shape}."
             )
