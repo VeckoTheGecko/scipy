@@ -890,6 +890,7 @@ def romb(y, dx=1.0, axis=-1, show=False):
         h /= 2.0
 
     if show:
+        raise Exception("OK GOOD! THE SHOW FLAG IS TESTED SO WE CAN FAIL")
         if not np.isscalar(R[(0, 0)]):
             print("*** Printing table only supported for integrals" +
                   " of a single data set.")
