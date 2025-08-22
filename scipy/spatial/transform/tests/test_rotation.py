@@ -1406,7 +1406,51 @@ def test_apply_multiple_rotations_multiple_points(xp):
     v_inverse = xp.asarray([[2.0, -1, 3], [4, 6, -5]])
     xp_assert_close(r.apply(v, inverse=True), v_inverse)
 
+@make_xp_test_case(Rotation.from_matrix, Rotation.apply)
+@pytest.mark.skip_xp_backends("numpy", reason="Cython rotation backend not capable of handling input arrays of arbitrary shape")
+def test_apply_multiple_rotation_multiple_points_broadcast(xp):
+    dtype = xpx.default_dtype(xp)
+    mat = np.empty((2, 3, 3))
+    mat[0] = np.array([
+        [0, -1, 0],
+        [1, 0, 0],
+        [0, 0, 1]
+    ])
+    mat[1] = np.array([
+        [1, 0, 0],
+        [0, 0, -1],
+        [0, 1, 0]
+    ])
+    mat = xp.asarray(mat, dtype=dtype)
+    r = Rotation.from_matrix(mat)
 
+    shape = (6, 5, 2, 3)
+    v = xp.asarray([[1, 2, 3], [4, 5, 6]], dtype=dtype)
+    ones = xp.ones(shape, dtype=dtype)
+    
+    xp_assert_close(r.apply(v) * ones, r.apply(v * ones))
+
+@make_xp_test_case(Rotation.from_matrix, Rotation.apply)
+def test_apply_multiple_rotation_multiple_points_broadcast_error_with_numpy(): #! is this test case running??
+    mat = np.empty((2, 3, 3))
+    mat[0] = np.array([
+        [0, -1, 0],
+        [1, 0, 0],
+        [0, 0, 1]
+    ])
+    mat[1] = np.array([
+        [1, 0, 0],
+        [0, 0, -1],
+        [0, 1, 0]
+    ])
+    r = Rotation.from_matrix(mat)
+
+    shape = (6, 5, 2, 3)
+    v = np.asarray([[1, 2, 3], [4, 5, 6]]) * np.ones(shape)
+
+    with pytest.raises(ValueError, match="Expected input of shape (3,) or (P, 3) while using the numpy backend, got "):
+        r.apply(v)
+    
 @make_xp_test_case(Rotation.from_matrix, Rotation.apply)
 def test_apply_shapes(xp):
     vector0 = xp.asarray([1.0, 2.0, 3.0])

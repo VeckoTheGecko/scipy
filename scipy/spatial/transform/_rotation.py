@@ -1616,14 +1616,17 @@ class Rotation:
             vectors, device=xp_device(self._quat), dtype=self._quat.dtype
         )
         single_vector = vectors.ndim == 1
-        # Numpy optimization: The Cython backend typing requires us to have fixed
-        # dimensions, so for the Numpy case we always broadcast the vector to 2D.
-        if vectors.ndim > 2 or vectors.shape[-1] != 3:
-            raise ValueError(
-                f"Expected input of shape (3,) or (P, 3), got {vectors.shape}."
-            )
         if is_numpy(self._xp):
             vectors = xpx.atleast_nd(vectors, ndim=2, xp=self._xp)
+
+        # Numpy optimization: The Cython backend typing requires us to have fixed
+        # dimensions, so for the Numpy case we always broadcast the vector to 2D.
+        if self._backend is array_namespace(np.array(0)) and (
+            vectors.ndim > 2 or vectors.shape[-1] != 3
+        ):
+            raise ValueError(
+                f"Expected input of shape (3,) or (P, 3) while using the numpy backend, got {vectors.shape}."
+            )
         result = self._backend.apply(self._quat, vectors, inverse=inverse)
         if self._single and single_vector:
             return result[0, ...]
